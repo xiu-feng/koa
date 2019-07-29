@@ -1,5 +1,6 @@
 // const router = require('../../lib/auth-router');
 const router = require('../../lib/router');
+const fs = require('fs');
 
 const knex = require('../../lib/knex');
 //测试接口
@@ -81,5 +82,90 @@ router.post('/sys/rollbackDown', async ctx =>{
     knex.migrate.down().then(()=>{
         ctx.body={'message':'回滚成功！'}
     })
+})
+/**
+ * 接口地址 /api/sys/tables
+ * 接口功能 根据表名自动生成接口
+ * 接口为公有的
+ * 接口参数 无
+ * 参数返回值 无
+ */
+router.get('/sys/tables', async ctx =>{
+    let list = await knex.schema.raw('show tables')
+    let tables = list[0];
+    let tableList=[];
+    // const keywords = ['knex_migrations', 'knex_migrations_lock']
+    for (var i =0 ;i<tables.length;i++){
+        if(!(tables[i].Tables_in_fms_db =='knex_migrations' || tables[i].Tables_in_fms_db =='knex_migrations_lock')){
+            tableList.push(tables[i].Tables_in_fms_db);
+        }
+    }
+
+    fs.mkdir('api/generator',error =>{
+        if(error){
+            console.log(error);
+            return false;
+        }
+        console.log('创建api目录成功');    
+    })
+
+    fs.mkdir('dao/generator',error =>{
+        if(error){
+            console.log(error);
+            return false;
+        }
+        console.log('创建dao目录成功');    
+    })
+   
+    for(var j =0;j<tableList.length;j++){
+        let k = tableList[j].lastIndexOf('_');
+        let table =tableList[j].substring(k+1);
+
+        let generatorrestful = `
+const Restful = require('../restful')
+const dao = require('../../dao/generator/${table}');
+const resource = '${table}'
+/**
+ * 封装外自定义方法 例
+ */
+// restful.aaa = async ctx =>{
+//     Farm.aaa
+// }
+const restful = Restful(resource, dao)
+
+module.exports = restful;`;
+        let generatordao = `
+const Crud = require('../crud')
+const table_name = 'T_base_${table}';
+
+const crud = Crud(table_name)
+
+/**
+ * 如要添加自定义的方法 格式如下
+ */
+// const knex = require('../../lib/knex');
+// crud.aaa = async (参数)=> {
+//   // db...
+// }
+
+module.exports = crud`;
+        fs.writeFile(`api/generator/${table}.js`,generatorrestful,'utf-8',error =>{
+        if(error){
+            console.log(error);
+            return false;
+        }
+        console.log(`写入api/generator/${table}.js成功`);
+    })
+    
+    fs.writeFile(`dao/generator/${table}.js`,generatordao,'utf-8',error =>{
+        if(error){
+            console.log(error);
+            return false;
+        }
+        console.log(`写入dao/generator/${table}.js成功`);
+    })
+    }
+    ctx.body ={'message':'生成成功！'};
+    return {'message':'生成成功！'};
 })
 module.exports = router;
