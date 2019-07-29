@@ -1,0 +1,27 @@
+{
+  "server": {
+    "port": 8000
+  },
+  "router": {
+    "api": {
+      "prefix": "/api"
+    },
+    "authApi": {
+      "prefix": "/api"
+    }
+  },
+  "knex": {
+    "client": "mysql",
+    "connection": {
+      "host": "106.15.36.248",
+      "port": "3306",
+      "user": "root",
+      "password": "123456",
+      "database": "cms_db"
+    }
+  },
+  "jwt": {
+    "secret": "`yGE[RniLYCX6rCni>DKG_(3#si&zvA$WPmgrb2P",
+    "expiresIn": 36000
+  }
+}
