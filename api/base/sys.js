@@ -83,6 +83,17 @@ router.post('/sys/rollbackDown', async ctx =>{
         ctx.body={'message':'回滚成功！'}
     })
 })
+
+
+function find(str,cha,num){
+    var x=str.indexOf(cha);
+    for(var i=0;i<num;i++){
+        x=str.indexOf(cha,x+1);
+    }
+    return x;
+    }
+
+
 /**
  * 接口地址 /api/sys/tables
  * 接口功能 根据表名自动生成接口
@@ -94,13 +105,14 @@ router.get('/sys/tables', async ctx =>{
     let list = await knex.schema.raw('show tables')
     let tables = list[0];
     let tableList=[];
-    // const keywords = ['knex_migrations', 'knex_migrations_lock']
-    for (var i =0 ;i<tables.length;i++){
-        if(!(tables[i].Tables_in_fms_db =='knex_migrations' || tables[i].Tables_in_fms_db =='knex_migrations_lock')){
-            tableList.push(tables[i].Tables_in_fms_db);
-        }
-    }
+    
+    tableList = tables.map(e => {
+        return Object.values(e)[0]
+    }).filter(e => {
+        return !e.startsWith('knex_')
+    })
 
+    console.log('.......',tableList);
     fs.mkdir('api/generator',error =>{
         if(error){
             console.log(error);
@@ -118,7 +130,8 @@ router.get('/sys/tables', async ctx =>{
     })
    
     for(var j =0;j<tableList.length;j++){
-        let k = tableList[j].lastIndexOf('_');
+        console.log(tableList[j]);
+        let k = find(tableList[j],'_',1)
         let table =tableList[j].substring(k+1);
 
         let generatorrestful = `
@@ -165,7 +178,10 @@ module.exports = crud`;
         console.log(`写入dao/generator/${table}.js成功`);
     })
     }
-    ctx.body ={'message':'生成成功！'};
+    ctx.body =list;
     return {'message':'生成成功！'};
 })
+
+
+
 module.exports = router;
