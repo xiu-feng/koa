@@ -38,12 +38,10 @@ app.use(async function responseTime(ctx, next) {
 
 // request parameters parser
 app.use(body({
-    formidable: {
-        uploadDir: `${__dirname}/public/uploads`, // This is where the files will be uploaded
-        keepExtensions: true,
-    },
     multipart: true,
-    urlencoded: true,
+    formidable: {
+        maxFileSize: 200*1024*1024    // 设置上传文件大小最大限制，默认2M
+    }
 }));
 
 // error handler
