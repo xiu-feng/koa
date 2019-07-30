@@ -91,7 +91,7 @@ function find(str,cha,num){
         x=str.indexOf(cha,x+1);
     }
     return x;
-    }
+}
 
 
 /**
