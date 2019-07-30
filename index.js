@@ -13,6 +13,8 @@ const unimplemented = require('./lib/unimplemented')
 const render = require('koa-art-template')
 const static = require('koa-static')
 const path=require('path')
+const logger= require('./lib/log');
+app.use(logger);
 // submqtt.sub();
 //配置模板引擎
 render(app, {
