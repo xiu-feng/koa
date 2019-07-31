@@ -107,16 +107,17 @@ const Restful = function(resource, dao) {
     return res;
   })
   /**
-   * 接口作用：按id删除数据
-   * 参数 where query参数
+   * 接口作用：按id修改字段数据
+   * 参数 id params参数 data request.body参数
    * 返回值 标志
    */
-  // authRouter.delete('/' + resource +'/where', async ctx =>{
-  //   let where = ctx.query;
-  //   let res = await dao.del(where);
-  //   ctx.body = res;
-  //   return res;
-  // })
+  authRouter.patch('/' + resource +'/:id', async ctx =>{
+    let id = ctx.params;
+    let data = ctx.request.body;
+    let res = await dao.update(id,data);
+    ctx.body = res;
+    return res;
+  })
   return {
     authRouter,
     publicRouter
