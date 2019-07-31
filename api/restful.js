@@ -1,5 +1,8 @@
 const authRouter = require('../lib/auth-router')
 const publicRouter = require('../lib/router')
+const jwt = require('../lib/jwt');
+const User = require('../dao/base/user');
+const Logger = require('../dao/base/logger')
 
 function parseQuery(query) {
   let where = {}
@@ -73,6 +76,10 @@ const Restful = function(resource, dao) {
   authRouter.post('/' + resource, async ctx =>{
     let data = ctx.request.body;
     let res = await dao.insert(data);
+    let userid = jwt.decode(ctx.request.header.token).id;
+    let row = await User.findById(userid);
+    let logData ={method:'post',requestUrl:'/api/'+resource,operator:row.username,body:JSON.stringify(data)}
+    let logRes = await Logger.insert(logData);
     ctx.body=res;
     return res;
   }),
@@ -86,6 +93,13 @@ const Restful = function(resource, dao) {
     let id =ctx.params;
     let data = ctx.request.body;
     let res = await dao.update(id,data);
+    //根据token获取操作人id
+    let userid = jwt.decode(ctx.request.header.token).id;
+    //获取用户名
+    let row = await User.findById(userid);
+    //往日志表里添加数据
+    let logData ={method:'put',requestUrl:'/api/'+resource+'/'+id.id,operator:row.username,params:JSON.stringify(id),body:JSON.stringify(data)}
+    let logRes = await Logger.insert(logData);
     ctx.body = res;
     return res; 
   }),
@@ -103,6 +117,10 @@ const Restful = function(resource, dao) {
   authRouter.delete('/' + resource +'/:id', async ctx =>{
     let id = ctx.params;
     let res = await dao.del(id);
+    let userid = jwt.decode(ctx.request.header.token).id;
+    let row = await User.findById(userid);
+    let logData ={method:'delete',requestUrl:'/api/'+resource+'/'+id.id,operator:row.username,params:JSON.stringify(id)}
+    let logRes = await Logger.insert(logData);
     ctx.body = res;
     return res;
   })
@@ -115,6 +133,10 @@ const Restful = function(resource, dao) {
     let id = ctx.params;
     let data = ctx.request.body;
     let res = await dao.update(id,data);
+    let userid = jwt.decode(ctx.request.header.token).id;
+    let row = await User.findById(userid);
+    let logData ={method:'patch',requestUrl:'/api/'+resource+'/'+id.id,operator:row.username,params:JSON.stringify(id),body:JSON.stringify(data)}
+    let logRes = await Logger.insert(logData);
     ctx.body = res;
     return res;
   })

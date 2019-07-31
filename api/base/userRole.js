@@ -1,6 +1,9 @@
 const router = require('../../lib/auth-router');
 const userRole = require('../../dao/base/user-role');
 const Restful = require('../restful')
+const jwt =require('../../lib/jwt')
+const User =require('../../dao/base/user')
+const Logger =require('../../dao/base/logger')
 const resource = 'userrole'
 /**
  * 配置用户角色模块
@@ -16,7 +19,7 @@ Restful.delafinsert=router.post('/userRole/delafinsert',async ctx =>{
     let rid = ctx.request.body.rid;
     let uid = ctx.request.body.uid;
     let data;
-    let list = await userRole.getlist({uid:uid});
+    let list = await userRole.list({uid:uid});
     let res='';
     if(list.length!=0){
         res  = await userRole.del({uid:uid});
@@ -32,6 +35,10 @@ Restful.delafinsert=router.post('/userRole/delafinsert',async ctx =>{
             res = await userRole.insert(data);
         }
     }
+    let userid = jwt.decode(ctx.request.header.token).id;
+    let row = await User.findById(userid);
+    let logData ={method:'post',requestUrl:'/api/userRole/delafinsert',operator:row.username,body:JSON.stringify(ctx.request.body)}
+    let logRes = await Logger.insert(logData);
     ctx.body=res;
     return res;
 })

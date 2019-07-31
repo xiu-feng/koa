@@ -1,6 +1,9 @@
 const router = require('../../lib/auth-router');
 const roleMenu = require('../../dao/base/role-menu');
 const Restful = require('../restful')
+const jwt =require('../../lib/jwt')
+const User =require('../../dao/base/user')
+const Logger =require('../../dao/base/logger')
 const resource = 'rolemenu'
 /**
  * 配置用户角色模块
@@ -16,7 +19,7 @@ Restful.delafinsert =router.post('/roleMenu/delafinsert',async ctx =>{
     let mid = ctx.request.body.mid;
     let rid = ctx.request.body.rid;
     let data;
-    let list = await roleMenu.getlist({rid:rid});
+    let list = await roleMenu.list({rid:rid});
     let res='';
     if(list.length!=0){
         res  = await roleMenu.del({rid:rid});
@@ -32,6 +35,10 @@ Restful.delafinsert =router.post('/roleMenu/delafinsert',async ctx =>{
             res = await roleMenu.insert(data);
         }
     }
+    let userid = jwt.decode(ctx.request.header.token).id;
+    let row = await User.findById(userid);
+    let logData ={method:'post',requestUrl:'/api/roleMenu/delafinsert',operator:row.username,body:JSON.stringify(ctx.request.body)}
+    let logRes = await Logger.insert(logData);
     ctx.body=res;
     return res;
 })

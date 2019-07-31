@@ -34,6 +34,16 @@ exports.up = function(knex) {
         t.integer('rid').notNull()
         t.integer('mid').notNull()
     })
+    .createTable('t_base_logger',t =>{
+        t.increments('id').unsigned().primary()
+        t.string('method').notNull().comment('请求方式')
+        t.string('requestUrl').notNull().comment('请求url')
+        t.string('operator').notNull().comment('操作人')
+        t.string('query').comment('query 参数')
+        t.string('params').comment('params 参数')
+        t.string('body').comment('body 参数')
+        t.timestamp('createTime').notNull().defaultTo(knex.fn.now())
+    })
 };
 
 exports.down = function(knex) {
@@ -43,4 +53,5 @@ exports.down = function(knex) {
     .dropTable('T_base_menu')
     .dropTable('T_base_user_role')
     .dropTable('T_base_role_menu')
+    .dropTable('t_base_logger')
 };

@@ -1,6 +1,7 @@
 const router = require('../../lib/router');
 
 const User = require('../../dao/base/user');
+const Logger = require('../../dao/base/logger')
 const jwt = require('../../lib/jwt');
 const { BadRequest, Unauthorized } = require('../../lib/error');
 const string = require('../../lib/string');
@@ -19,11 +20,10 @@ router.post('/login', async (ctx) => {
     ctx.checkBody('password').notEmpty('Password field is required').len(4, 20, 'Password length must be between 4 and 20 characters');
 
     if (ctx.errors) throw new BadRequest(ctx.errors);
-    const search = {
+    let search = {
         username: ctx.request.body.username,
         password: string.generatePasswordHash(ctx.request.body.password),
     }
-    console.log(search)
     const user = await User.findOne(search);
 
     if (!user){ 
@@ -35,7 +35,14 @@ router.post('/login', async (ctx) => {
         username: user.username,
         token: token,
     };
-        return token;
+    //根据token获取操作人id
+    let userid = user.id
+     //获取用户名
+    let row = await User.findById(userid);
+     //往日志表里添加数据
+    let logData ={method:'post',requestUrl:'/api/login',operator:row.username+'登录',body:JSON.stringify(search)}
+    let logRes = await Logger.insert(logData);
+    return token;
     };
 });
 

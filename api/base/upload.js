@@ -1,13 +1,11 @@
-const router = require('../../lib/router');
+const authRouter = require('../../lib/auth-router')
+const jwt = require('../../lib/jwt')
+const User =require('../../dao/base/user')
+const Logger =require('../../dao/base/logger')
 const fs = require('fs');
 const path = require('path');
 
-
-/**
- * 接口功能 上传文件
- * 参数 一个文件
- */
-router.post('/uploadfile', async (ctx, next) => {
+authRouter.post('/uploadfile', async (ctx, next) => {
     // 上传单个文件
     const file = ctx.request.files.file; // 获取上传文件
     // 创建可读流
@@ -17,13 +15,14 @@ router.post('/uploadfile', async (ctx, next) => {
     const upStream = fs.createWriteStream(filePath);
     // 可读流通过管道写入可写流
     reader.pipe(upStream);
+    let userid = jwt.decode(ctx.request.header.token).id;
+    let row = await User.findById(userid);
+    let logData ={method:'post',requestUrl:'/api/uploadfile',operator:row.username,body:filePath}
+    let logRes = await Logger.insert(logData);
     return ctx.body = {"message":"上传成功！","name":`${new Date().getTime()}`+`${file.name}`};
   });
-/**
- * 上传多个文件
- * 必须两个以上文件
- */
-  router.post('/uploadfiles', async (ctx, next) => {
+//最少2个文件
+authRouter.post('/uploadfiles', async (ctx, next) => {
     // 上传多个文件
     const files = ctx.request.files.file; // 获取上传文件
     for (let file of files) {
@@ -35,8 +34,13 @@ router.post('/uploadfile', async (ctx, next) => {
       const upStream = fs.createWriteStream(filePath);
       // 可读流通过管道写入可写流
       reader.pipe(upStream);
+      let userid = jwt.decode(ctx.request.header.token).id;
+      let row = await User.findById(userid);
+      let logData ={method:'post',requestUrl:'/api/uploadfiles',operator:row.username,body:filePath}
+      let logRes = await Logger.insert(logData);
     }
+     
    return ctx.body = ctx.body = {"message":"上传成功！"};
   });
 
-  module.exports = router;
+  module.exports = authRouter;
