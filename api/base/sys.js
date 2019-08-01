@@ -59,6 +59,13 @@ router.post('/sys/makeSys',async ctx =>{
     })
 })
 /**
+ * 运行seeds下的文件
+ */
+router.post('/sys/runseed',async ctx =>{
+    await knex.seed.run();
+    ctx.body={'message':'更新成功！'}
+})
+/**
  * 接口地址 /api/sys/updateNext
  * 接口功能 更新未执行的下一 迁移
  * 接口为私有的

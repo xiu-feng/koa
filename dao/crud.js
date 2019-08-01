@@ -1,5 +1,5 @@
 const db = require('./sql');
-
+const fs =require('fs')
 const Crud = function(table) {
   return {
     /**
@@ -8,6 +8,20 @@ const Crud = function(table) {
      */
     insert: async (data)=>{
         let status =await db.insert(table,data);
+        let insertseed =`
+exports.seed = function(knex) {    
+    return knex('${table}').insert([${JSON.stringify(data)}]);
+};
+ `
+        if(table!='t_base_logger'){
+            fs.writeFile(`seeds/insert_${table}_${new Date().getTime()}.js`,insertseed,'utf-8',error =>{
+                if(error){
+                    console.log(error);
+                    return false;
+                }
+                console.log(`写入seeds/insert_${table}_${new Date().getTime()}.js成功`);
+            })
+        }
         return status;
 
     },
@@ -17,6 +31,18 @@ const Crud = function(table) {
      */
     update: async (where,data)=>{
         let status =await db.update(table,where,data);
+        let updateseed =`
+        exports.seed = function(knex) {    
+            return knex('${table}').where(${JSON.stringify(where)}).update([${JSON.stringify(data)}]);
+        };
+         `
+        fs.writeFile(`seeds/update_${table}_${new Date().getTime()}.js`,updateseed,'utf-8',error =>{
+            if(error){
+                console.log(error);
+                return false;
+            }
+            console.log(`写入seeds/update_${table}_${new Date().getTime()}.js成功`);
+        })
         return status;
     },
 
@@ -26,6 +52,17 @@ const Crud = function(table) {
      */
     del: async (where)=>{
         let status = await db.del(table,where);
+        let delseed =`
+        exports.seed = function(knex) {    
+            return knex('${table}').where(${JSON.stringify(where)}).del();
+        }; `
+        fs.writeFile(`seeds/del_${table}_${new Date().getTime()}.js`,delseed,'utf-8',error =>{
+            if(error){
+                console.log(error);
+                return false;
+            }
+            console.log(`写入seeds/del_${table}_${new Date().getTime()}.js成功`);
+        })
         return status;
     },
 
